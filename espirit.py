@@ -3,49 +3,71 @@ import numpy as np
 fft  = lambda x, ax : np.fft.fftshift(np.fft.fftn(np.fft.ifftshift(x, axes=ax), axes=ax, norm='ortho'), axes=ax) 
 ifft = lambda X, ax : np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(X, axes=ax), axes=ax, norm='ortho'), axes=ax) 
 
+def calreg(X, r):
+  sx = np.shape(X)[0]
+  sy = np.shape(X)[1]
+  sz = np.shape(X)[2]
+  nc = np.shape(X)[3]
+
+  sxt = (sx//2-r//2, sx//2+r//2) if (sx > 1) else (0, 1)
+  syt = (sy//2-r//2, sy//2+r//2) if (sy > 1) else (0, 1)
+  szt = (sz//2-r//2, sz//2+r//2) if (sz > 1) else (0, 1)
+
+  # Extract calibration region.    
+  C = X[sxt[0]:sxt[1], syt[0]:syt[1], szt[0]:szt[1], :].copy().astype(np.complex64)
+
+  return C
+
+def calmat(C, k, r):
+
+  sx = np.shape(C)[0]
+  sy = np.shape(C)[1]
+  sz = np.shape(C)[2]
+  nc = np.shape(C)[3]
+
+  # Construct Hankel matrix.
+  p = (sx > 1) + (sy > 1) + (sz > 1)
+  A = np.zeros([(r-k+1)**p, k**p * nc]).astype(np.complex64)
+
+  idx = 0
+  for xdx in range(max(1, C.shape[0] - k + 1)):
+    for ydx in range(max(1, C.shape[1] - k + 1)):
+      for zdx in range(max(1, C.shape[2] - k + 1)):
+        # numpy handles when the indices are too big
+        block = C[xdx:xdx+k, ydx:ydx+k, zdx:zdx+k, :].astype(np.complex64) 
+        A[idx, :] = block.flatten()
+        idx = idx + 1
+
+  return A
+
 def espirit(X, k, r, t, c):
     """
     Derives the ESPIRiT operator.
 
     Arguments:
-      X: Multi channel k-space data. Expected dimensions are (sx, sy, sz, nc), where (sx, sy, sz) are volumetric 
-         dimensions and (nc) is the channel dimension.
-      k: Parameter that determines the k-space kernel size. If X has dimensions (1, 256, 256, 8), then the kernel 
-         will have dimensions (1, k, k, 8)
-      r: Parameter that determines the calibration region size. If X has dimensions (1, 256, 256, 8), then the 
-         calibration region will have dimensions (1, r, r, 8)
-      t: Parameter that determines the rank of the auto-calibration matrix (A). Singular values below t times the
-         largest singular value are set to zero.
+      X: Multi channel k-space data. Expected dimensions are (sx, sy, sz, nc), 
+         where (sx, sy, sz) are volumetric dimensions and (nc) is the channel dimension.
+      k: Parameter that determines the k-space kernel size. If X has 
+         dimensions (1, 256, 256, 8), then the kernel will have dimensions (1, k, k, 8)
+      r: Parameter that determines the calibration region size. If X has 
+         dimensions (1, 256, 256, 8), then the calibration region will have 
+         dimensions (1, r, r, 8)
+      t: Parameter that determines the rank of the auto-calibration matrix (A). Singular 
+         values below t times the largest singular value are set to zero.
       c: Crop threshold that determines eigenvalues "=1".
     Returns:
-      maps: This is the ESPIRiT operator. It will have dimensions (sx, sy, sz, nc, nc) with (sx, sy, sz, :, idx)
-            being the idx'th set of ESPIRiT maps.
+      maps: This is the ESPIRiT operator. It will have dimensions (sx, sy, sz, nc, nc) 
+            with (sx, sy, sz, :, idx) being the idx'th set of ESPIRiT maps.
     """
 
     sx = np.shape(X)[0]
     sy = np.shape(X)[1]
     sz = np.shape(X)[2]
     nc = np.shape(X)[3]
-
-    sxt = (sx//2-r//2, sx//2+r//2) if (sx > 1) else (0, 1)
-    syt = (sy//2-r//2, sy//2+r//2) if (sy > 1) else (0, 1)
-    szt = (sz//2-r//2, sz//2+r//2) if (sz > 1) else (0, 1)
-
-    # Extract calibration region.    
-    C = X[sxt[0]:sxt[1], syt[0]:syt[1], szt[0]:szt[1], :].astype(np.complex64)
-
-    # Construct Hankel matrix.
     p = (sx > 1) + (sy > 1) + (sz > 1)
-    A = np.zeros([(r-k+1)**p, k**p * nc]).astype(np.complex64)
 
-    idx = 0
-    for xdx in range(max(1, C.shape[0] - k + 1)):
-      for ydx in range(max(1, C.shape[1] - k + 1)):
-        for zdx in range(max(1, C.shape[2] - k + 1)):
-          # numpy handles when the indices are too big
-          block = C[xdx:xdx+k, ydx:ydx+k, zdx:zdx+k, :].astype(np.complex64) 
-          A[idx, :] = block.flatten()
-          idx = idx + 1
+    C = calreg(X, r)
+    A = calmat(C, k, r)
 
     # Take the Singular Value Decomposition.
     U, S, VH = np.linalg.svd(A, full_matrices=True)
