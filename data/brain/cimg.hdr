@@ -1,0 +1,8 @@
+# Dimensions
+1 230 180 8 1 1 1 1 1 1 1 1 1 1 1 1 
+# Command
+fmac -s 16 pimg maps cimg 
+# Files
+ >cimg <maps <pimg
+# Creator
+BART v0.3.01-279-gb53d15b

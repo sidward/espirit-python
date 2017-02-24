@@ -1,0 +1,8 @@
+# Dimensions
+1 230 180 8 1 1 1 1 1 1 1 1 1 1 1 1 
+# Command
+noise -n 100 cimg noisy 
+# Files
+ >noisy <cimg
+# Creator
+BART v0.3.01-279-gb53d15b

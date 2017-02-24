@@ -4,12 +4,29 @@ from estvar import estvar
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Pure noise test
-size = (1, 50, 50, 8)
-sigma = 10
-X = np.random.normal(loc=0,scale=sigma/np.sqrt(2), size=size) + 1j * np.random.normal(loc=0,scale=sigma/np.sqrt(2), size=size) 
+k = 6
+r = 24
 
-est = estvar(X, 6, 24)
+var = 1000000
+X = cfl.readcfl('data/knee/noisy')
 
-print("True noise variance: %f" % sigma**2)
+#var = 100
+#X = cfl.readcfl('data/brain/noisy')
+
+print("Method 1")
+est = estvar(X, k, r, 1)
+print("True variance: %f" % var)
 print("Estimated noise variance: %f" % est)
+print("Ratio of estimated over true value: %f" % (est/var))
+
+print("Method 2")
+est = estvar(X, k, r, 2)
+print("True variance: %f" % var)
+print("Estimated noise variance: %f" % est)
+print("Ratio of estimated over true value: %f" % (est/var))
+
+print("Method 3")
+est = estvar(X, k, r, 3)
+print("True variance: %f" % var)
+print("Estimated noise variance: %f" % est)
+print("Ratio of estimated over true value: %f" % (est/var))
