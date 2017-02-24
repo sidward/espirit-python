@@ -59,7 +59,7 @@ def estvar_patches(X, k, r):
     for ydx in range(max(1, c.shape[1] - k + 1)):
       for zdx in range(max(1, c.shape[2] - k + 1)):
         # numpy handles when the indices are too big
-        block = C[xdx:xdx+k, ydx:ydx+k, zdx:zdx+k, :].astype(np.complex64) 
+        block = c[xdx:xdx+k, ydx:ydx+k, zdx:zdx+k, :].astype(np.complex64) 
         X[:, idx] = block.flatten()
         idx = idx + 1
   
@@ -82,10 +82,10 @@ def estvar_patches(X, k, r):
   tau_arr = np.zeros((k**p, 1)).astype(np.complex64)
   med_arr = np.zeros((k**p, 1)).astype(np.complex64)
   for idx in range(k**p):
-    tau = np.sum(d[idx:])/(k**p - idx)
-    tau_arr[idx] = tau
+    tau_arr[idx] = np.mean(d[idx:])
     med_arr[idx] = np.median(d[idx:])
 
   diff = np.abs(med_arr - tau_arr)
   idx = np.argmin(diff)
+
   return np.abs(tau_arr[idx])
