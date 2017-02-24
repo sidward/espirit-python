@@ -7,11 +7,14 @@ import numpy as np
 k = 6
 r = 24
 
-var = 1000000
-X = cfl.readcfl('data/knee/noisy')
+#var = 1000000
+#X = cfl.readcfl('data/knee/noisy')
 
 #var = 100
 #X = cfl.readcfl('data/brain/noisy')
+
+var = 100
+X = cfl.readcfl('data/alias/noisy')
 
 print("Method 1")
 est = estvar(X, k, r, 1)

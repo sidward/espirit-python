@@ -12,20 +12,30 @@ def estvar(X, k, r, method):
   return -1
 
 def estvar_cov(X, k, r):
+  # Extract calibration region.
   C = calreg(X, r)
+  # Get low-res image by taking unitary ifft.
   c = ifft(C, (0, 1, 2))
-  
-  vec = np.reshape(c, (c.shape[0] * c.shape[1] * c.shape[2], c.shape[3]))
-  u = np.mean(vec, 1)
+  # Reshape image into vectors in C^[m x n] where n is number of channels and
+  # m is the product of the image dimensions
+  X = np.reshape(c, (c.shape[0] * c.shape[1] * c.shape[2], c.shape[3]))
+  # Get mean of vectors
+  u = np.mean(X, 1)
   u.shape = (len(u), 1)
-  vec = vec - np.tile(u, (1, c.shape[3]))
-  cov = vec.conj().T.dot(vec)
+  # Subtract mean from data.
+  X = X - np.tile(u, (1, c.shape[3])) 
+  # Construct covariance matrix and get its eigenvalues
+  cov = X.conj().T.dot(X)
   d, v = np.linalg.eig(cov)
-  d = (np.abs(d)/vec.shape[0])
-  d.sort()
-  assert (d[0] < d[-1])
-  d = d[:int(np.floor(c.shape[3] * 0.4))]
+  # Scale eigenvalues down by m and sorting in ascending order.
+  d = (np.abs(d)/X.shape[0])
+  d = np.sort(d)[::-1]
+  assert (d[0] > d[-1])
+  # Discarding first two eigenvalues.
+  d = d[2:]
+  # Discarding any eigenvalues below image precision
   d = d[d > 1e-6]
+  # Estimate: Mean of the remining eigenvalues.
   return np.mean(d)
 
 def estvar_meansub(X, k, r):
@@ -88,4 +98,4 @@ def estvar_patches(X, k, r):
   diff = np.abs(med_arr - tau_arr)
   idx = np.argmin(diff)
 
-  return np.abs(tau_arr[idx])
+  return np.abs(med_arr[idx])

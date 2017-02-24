@@ -1,0 +1,8 @@
+# Dimensions
+1 320 256 8 2 1 1 1 1 1 1 1 1 1 1 1 
+# Command
+ecalib -a -m 2 brain_alias maps 
+# Files
+ >maps <brain_alias
+# Creator
+BART v0.3.01-279-gb53d15b

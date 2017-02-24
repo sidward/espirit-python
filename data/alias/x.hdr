@@ -1,0 +1,8 @@
+# Dimensions
+1 320 256 8 1 1 1 1 1 1 1 1 1 1 1 1 
+# Command
+fft -iu 7 brain_alias x 
+# Files
+ >x <brain_alias
+# Creator
+BART v0.3.01-279-gb53d15b
